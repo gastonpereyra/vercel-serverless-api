@@ -1,58 +1,154 @@
-# Template NPM Packages
+# Vercel-Serverless-Api
 
-![npm-template](https://user-images.githubusercontent.com/39351850/89736287-af2cd580-da3e-11ea-86f2-f1829c3fafdf.png)
+## Code Quality Status
+![Build Status](https://github.com/gastonpereyra/vercel-serverless-api/workflows/Build%20Status/badge.svg)
+[![Coverage Status](https://img.shields.io/coveralls/github/gastonpereyra/vercel-serverless-api/master.svg)](https://coveralls.io/r/gastonpereyra/vercel-serverless-api?branch=master)
 
-## :loudspeaker: Description
-This is a template repository to make easier configurate NPM package repositories
+![npm-vercel-serverless-api](https://user-images.githubusercontent.com/39351850/132961710-27605cee-2e42-410a-bc08-cbf091094873.png)
 
-## :floppy_disk: Installation
+## Description
+A handler for Serverless Function in Vercel to develop API
 
-Steps :walking: :
+## Installation
 
-1. :chestnut: In the *Top-Navbar*, at right corner, on *+*, click **new Repository**
+```
+npm i vercel-serverless-api
+```
 
-![New Repository](https://user-images.githubusercontent.com/39351850/89736268-83115480-da3e-11ea-988d-066ce80f88b9.png)
+## API
 
-2. :seedling: In *Repository Template*, open menu, click *npm-template*
+Its a Class to help to create an API.
 
-![Use Template](https://user-images.githubusercontent.com/39351850/89736261-7ee53700-da3e-11ea-855f-f6ef9162b609.png)
+### Getters
 
-3. :four_leaf_clover: Fill the **Repository Name**
-4. :blossom: Add a **Description**
-5. :bouquet: Click **Create Repository**
+#### Ids
+* `pathIds`: _object_, Query Parameters or Path-Parameters for ids
+    * Example: `https://example.verce.app/api/message?pathIds.id=10`
+        * `pathIds.id`: '10'
+    * Example: `https://example.verce.app/api/message/?pathIds.emailId=11`
+        * `pathIds.emailId`: '11'
 
-## :white_check_mark: Content
+#### Body
+* `data`: _object_, Body
 
-<details>
- <summary><b> :bookmark: NPM - `package.json` </b></summary>
+#### Queries
+* `filters`: _object_, Query parameters to filter
+    * Example `https://example.verce.app/api/message?name=John&filters.age=10`
+        * `filters.name`: 'John'
+        * `filters.age`: '10'
+* `this.sort`: _object_, Query parameters to sort
+    * Example: `https://example.verce.app/api/message?sortBy=name&sortDirection=desc`
+        * `sort.by`: 'name'
+        * `sort.direction`: 'desc'
 
-* `Mocha` and `Sinon` testings dependencies, and `test` / `test-ci` script
-* `Nyc` coverage dependency, `.nycrc` file and `coverage` script
-* `eslint` and `eslint-airbnb` linter dependencies and `.eslintrc.js` file
-* `root/lib/` as file container
+* `query`: _object_, Query parameters
+    * Example: `https://example.verce.app/api/message?other.foo=name`
+        * `query.foo`: 'name'
 
-</details>
+#### Request
 
-<details>
- <summary><b> :bar_chart: Actions Workflows </b></summary>
+Other request data
 
-* Build Status to run tests, on every branches
-* Coverage status to generate Coveralls badge on push and PR
-* Linter status for push and PR
-* NPM publish on releases
+* `request`
+    * `request.url`: Request URL
+    * `request.method`: Request REST Method
+    * `request.headers`: Request Headers
+    * `request.cookies`: Request cookies
 
-</details>
+### Methods
 
-<details>
- <summary><b> :scroll: README Template </b></summary>
+* `setCode(code)`: To setup a custom response status-code
+    * `code`: _number_
 
-* Some Block pre-build
-* Build Status and Coverage Status badges
-* Must change `tpl` extension for `md`
+* `setBody(body)`: To setup a custom response body
+    * `body`: _object_
 
-</details>
+* `validate`: For validation. If you throw an error, will setup status-code 400 by default
+    * `async`
 
-#  :pencil: References
+* `process`: The API itself. If you throw an error, will setup status-code 500 by default
+    * `async`
 
-* Templates in :us: [Click HERE!!!!!](https://docs.github.com/en/github/managing-your-work-on-github/about-project-boards)
-* Templates en :es: [Click ACA!!!!!](https://docs.github.com/es/github/creating-cloning-and-archiving-repositories/creating-a-template-repository)
+### Structure Validation
+
+Can use [`superstruct@0.7.0`](https://github.com/ianstormtaylor/superstruct/tree/v0.7.0) to validate body, ids, filters, sort, only must rewrite the following method
+
+* `idsStruct`
+    * `static`
+* `bodyStruct`
+    * `static`
+* `filtersStruct`
+    * `static`
+* `sortStruct`
+    * `static`
+* `queryStruct`
+    * `static`
+
+### Usage
+
+```js
+const { struct } = require('superstruct'); // only works up to 0.7.0 version
+const { API } = require('vercel-serverless-api');
+
+module.exports = class MyApi extends API {
+
+    static get idsStruct() {
+        return struct({
+            id: 'string'
+        });
+    }
+
+    static get bodyStruct() {
+        return struct({
+            name: 'string',
+            age: 'string?'
+        });
+    }
+
+    static get filtersStruct() {
+        return struct({
+            name: 'string|null?',
+            age: 'string|null?'
+        });
+    }
+
+    static get sortStruct() {
+        return struct({
+            by: 'string?',
+            direction: 'string?'
+        });
+    }
+
+    validate() {
+
+        if(this.data.age < 10)
+            throw new Error('Too Young'); // statusCode will be 400
+    }
+
+    process() {
+
+        if(!this.data.name)
+            throw new Error('Empty String is not valid'); // statusCode will be 500
+
+        this.setCode(201).setBody({
+            name: this.data.name
+            lastname: 'Stark',
+            age: this.data.age + 1
+        });
+    }
+}
+
+```
+
+## Handler
+
+The API Class and Handler can be combined to help to devolope Serverless Function in Vercel
+
+```js
+// in ./api/message/post.js
+const { hanlder } = require('vercel-serverless-api');
+
+const MyApi = require('./my-api');
+
+module.exports = (..args) => handler(MyApi, ...args);
+```
