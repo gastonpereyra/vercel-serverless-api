@@ -27,6 +27,7 @@
   },
   "homepage": "https://github.com/gastonpereyra/vercel-serverless-api#readme",
   "devDependencies": {
+    "@janiscommerce/superstruct": "^1.2.0",
     "eslint": "^7.32.0",
     "eslint-config-airbnb-base": "^13.2.0",
     "eslint-plugin-import": "^2.24.2",
