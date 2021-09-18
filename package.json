@@ -1,6 +1,6 @@
 {
   "name": "vercel-serverless-api",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A handler for Serverless Function in Vercel to develop API",
   "main": "lib/index.js",
   "files": [
@@ -10,7 +10,7 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "export TEST_ENV=true; mocha --exit --recursive tests/",
+    "test": "export TEST_ENV=true; mocha -R Min --exit --recursive tests/",
     "coverage": "nyc npm test",
     "test-ci": "nyc --reporter=lcov --reporter=text-summary mocha --exit --recursive tests/",
     "lint": "eslint lib/ tests/"

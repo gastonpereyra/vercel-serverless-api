@@ -60,8 +60,12 @@ Other request data
 * `setCode(code)`: To setup a custom response status-code
     * `code`: _number_
 
-* `setBody(body)`: To setup a custom response body
-    * `body`: _object_
+* `setHeader(header, value)`: To setup a custom response header.
+    * `header`: _string_
+    * `value`: _string_ or _number_ or _boolean_
+
+* `setBody(body)`: To setup a custom response body. If you do not set a custom Content-type, this will be `application/json`
+    * `body`: _object_ (for JSON) or _any_ (for other content-type)
 
 * `validate`: For validation. If you throw an error, will setup status-code 400 by default
     * `async`
@@ -129,6 +133,12 @@ module.exports = class MyApi extends API {
 
         if(!this.data.name)
             throw new Error('Empty String is not valid'); // statusCode will be 500
+
+        if(this.data.image) {
+            this.setHeader('Content-Type', 'text/plain') // Set a Custom Content-Type
+                .setHeader('X-Custom', 100) // Set a Custom Header
+                .setBody('<h1>Secret</h1>') // Because setting a Custom Type will Response a Plain Text
+        }
 
         this.setCode(201).setBody({
             name: this.data.name

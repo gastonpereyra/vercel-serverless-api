@@ -10,12 +10,16 @@ describe('Vercel Serverless API', () => {
 
 	const responseDummy = {
 		status() { return this; },
-		json() { return this; }
+		json() { return this; },
+		send() { return this; },
+		setHeader() { return this; }
 	};
 
 	beforeEach(() => {
 		sinon.spy(responseDummy, 'status');
 		sinon.spy(responseDummy, 'json');
+		sinon.spy(responseDummy, 'send');
+		sinon.spy(responseDummy, 'setHeader');
 	});
 
 	afterEach(() => {
@@ -438,7 +442,7 @@ describe('Vercel Serverless API', () => {
 			});
 		});
 
-		it('Should return custom statusCode with custom body response ', async () => {
+		it('Should return custom statusCode with custom body response', async () => {
 
 			class ApiDummy extends API {
 				process() {
@@ -454,6 +458,27 @@ describe('Vercel Serverless API', () => {
 			sinon.assert.calledOnceWithExactly(responseDummy.json, {
 				url: '/api/custom'
 			});
+		});
+
+		it('Should return custom headers and do not use .json() if change content-type', async () => {
+
+			class ApiDummy extends API {
+				process() {
+					this.setHeader('Content-Type', 'text/plain')
+						.setHeader('x-custom', 'test')
+						.setCode(202);
+				}
+			}
+
+			await handler(ApiDummy, { url: '/api/custom' }, responseDummy);
+
+			sinon.assert.calledOnceWithExactly(responseDummy.status, 202);
+			sinon.assert.calledOnceWithExactly(responseDummy.send, {});
+			sinon.assert.notCalled(responseDummy.json);
+
+			sinon.assert.calledTwice(responseDummy.setHeader);
+			sinon.assert.calledWithExactly(responseDummy.setHeader, 'Content-Type', 'text/plain');
+			sinon.assert.calledWithExactly(responseDummy.setHeader, 'x-custom', 'test');
 		});
 
 		it('Should return 500 if process fails', async () => {
